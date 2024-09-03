@@ -181,22 +181,28 @@ weighted avg       0.99      0.99      0.99    478055
 
 9.2 Key Observations
 
-Class Imbalance: There's a severe class imbalance, with class 2 dominating the dataset (459,109 out of 478,055 samples).
+Class Distribution: There's a severe class imbalance in the dataset:
+
+One class (labeled as '2' in the report) dominates with 459,109 out of 478,055 samples.
+Other classes have much smaller representations, ranging from just 27 samples (class '9') to 6,281 samples (class '4').
+
+
 Performance Variability: Performance varies significantly across classes:
 
-Classes 0 and 9 have zero precision, recall, and F1-score.
-Class 2 shows perfect performance, likely due to its dominance.
+Two classes (labeled as '0' and '9' in the report) have zero precision, recall, and F1-score, indicating the model failed to predict these classes entirely.
+The dominant class (labeled as '2') shows perfect performance (precision, recall, and F1-score all 1.00), likely due to its overwhelming presence in the dataset.
 Other classes show varying degrees of performance, with F1-scores ranging from 0.01 to 0.82.
 
 
-Overall Metrics: While overall accuracy is high (0.99), this is misleading due to the class imbalance.
+Overall Metrics: While overall accuracy is high (0.99), this is misleading due to the class imbalance and the perfect performance on the dominant class.
 Macro vs Weighted Average: The discrepancy between macro average (0.51 F1-score) and weighted average (0.99 F1-score) further highlights the impact of class imbalance.
 
 9.3 Challenges Identified
 
-Class Imbalance: The extreme dominance of one class is skewing overall results and hindering the model's ability to learn from minority classes.
-Underperforming Classes: Some classes (0, 1, 3, 9) are poorly recognized by the model.
+Severe Class Imbalance: The extreme dominance of one class is skewing overall results and hindering the model's ability to learn from minority classes.
+Underperforming Classes: Some classes (particularly those labeled as '0', '1', '3', and '9' in the report) are poorly recognized by the model.
 Precision-Recall Trade-off: Some classes show a significant imbalance between precision and recall.
+Zero Performance on Minority Classes: The model completely fails to predict two of the minority classes.
 
 10. Next step for Improvement
 
