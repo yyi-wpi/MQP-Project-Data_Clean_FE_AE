@@ -1,0 +1,251 @@
+# Network Flow Dataset Project Documentation
+
+## 1. Project Overview
+This project focuses on preprocessing, feature engineering, and analyzing the NF-UNSW-NB15-v2 dataset for cybersecurity applications. The goal is to prepare the dataset for analysis and model building by cleaning data, creating new features, transforming both categorical and numerical features, and exploring advanced machine learning techniques such as autoencoders for anomaly detection and classification.
+
+## 2. Initial Setup and Challenges
+- **Dataset**: We started with the NF-UNSW-NB15-v2.csv file, containing network traffic data.
+- **Initial Challenges**:
+  - The script initially failed to recognize the 'Label' column correctly.
+  - There were inconsistencies in column naming conventions (uppercase vs. lowercase).
+
+## 3. Column Naming Issue: A Major Challenge
+
+### 3.1 The Problem
+One of the most significant and time-consuming challenges we faced was related to column naming conventions:
+
+- The original dataset used uppercase column names (e.g., 'LABEL', 'IPV4_SRC_ADDR').
+- Our initial script assumed lowercase column names, leading to KeyErrors and misidentification of features.
+- The 'Label' column, crucial for our classification task, was particularly problematic as it wasn't being correctly identified as the target variable.
+
+### 3.2 Impact of the Issue
+- Multiple script failures and errors during execution.
+- Inconsistent preprocessing: some features were being incorrectly included or excluded from transformation.
+- Significant time spent debugging and tracing the source of errors.
+- Potential data integrity issues if not caught and resolved.
+
+### 3.3 Resolution Process
+We went through several iterations to resolve this issue:
+
+1. **Initial Diagnosis**:
+   - Used extensive logging to identify which columns were causing KeyErrors.
+   - Printed out the full list of column names to compare with our expectations.
+
+2. **First Attempt**:
+   - Modified the script to convert all column names to lowercase upon loading the data.
+   - This solved some issues but introduced new ones where mixed-case column names were now incorrect.
+
+3. **Second Attempt**:
+   - Reverted to preserving original column names.
+   - Updated all references in the script to use uppercase column names.
+   - This approach was more successful but still missed some edge cases.
+
+4. **Final Solution**:
+   - Implemented a case-insensitive column matching function.
+   - Used this function throughout the script when referencing columns.
+   - Added a configuration option to specify the expected case of the 'Label' column.
+
+### 3.4 Code Example of Final Solution
+```python
+def case_insensitive_column_match(df, column_name):
+    return df.columns[df.columns.str.lower() == column_name.lower()][0]
+
+# Usage
+label_column = case_insensitive_column_match(df, config['label_column'])
+features = [col for col in df.columns if col.lower() != config['label_column'].lower()]
+```
+
+### 3.5 Lessons Learned and Future Approaches
+1. **Data Inspection**: Always thoroughly inspect the raw data before starting preprocessing. Don't assume column names or cases.
+2. **Flexible Code**: Write code that's flexible to variations in input data. Use case-insensitive matching where appropriate.
+3. **Configuration Over Hard-coding**: Use configuration files to specify expected column names and cases. This allows for easy adjustments without changing the core code.
+4. **Robust Logging**: Implement detailed logging from the start. It's invaluable for debugging data-related issues.
+5. **Validation Steps**: Add data validation steps early in the pipeline to catch inconsistencies in column names or data structures.
+6. **Documentation**: Keep clear documentation of the expected data format, including column names and cases. Update this as the project evolves.
+7. **Version Control**: Use version control not just for code, but also for tracking changes in data preprocessing steps and configuration.
+8. **Automated Testing**: Develop unit tests that verify correct handling of different column name scenarios.
+
+## 4. Iterative Development Process
+We went through several iterations to refine our preprocessing script:
+
+### 4.1 First Iteration
+- Created a basic data cleaning and feature engineering script.
+- Encountered issues with column names and 'Label' column recognition.
+
+### 4.2 Second Iteration
+- Modified the script to preserve original column names (uppercase).
+- Added more detailed logging for better debugging.
+- Adjusted the feature engineering process.
+
+### 4.3 Third Iteration
+- Addressed the main problem of 'Label' column being included in the feature set instead of being treated as the target variable.
+- Excluded the 'Label' column from both numeric and categorical features.
+- Moved the target column check earlier in the process.
+- Added more comprehensive logging.
+
+### 4.4 Final Iteration
+- Implemented case-insensitive column matching.
+- Refined the configuration file to include column name expectations.
+- Thoroughly tested with various column name scenarios.
+
+## 5. Final Script Structure and Functionality
+
+### 5.1 Configuration File
+- Created a `config.yaml` file to store configurable parameters like epsilon values, logging settings, file paths, and expected column names.
+
+### 5.2 Data Loading
+- Used pandas to load the dataset.
+- Implemented initial data inspection to understand structure, row/column count, and data types.
+- Applied case-insensitive column matching for consistent column access.
+
+### 5.3 Feature Engineering
+- Created new features:
+  - `TOTAL_BYTES`: Sum of `IN_BYTES` and `OUT_BYTES`
+  - `TOTAL_PACKETS`: Sum of `IN_PKTS` and `OUT_PKTS`
+  - `BYTES_PER_PACKET`: `TOTAL_BYTES` / (`TOTAL_PACKETS` + epsilon)
+  - `IN_OUT_BYTES_RATIO`: `IN_BYTES` / (`OUT_BYTES` + epsilon)
+  - `IN_OUT_PACKETS_RATIO`: `IN_PKTS` / (`OUT_PKTS` + epsilon)
+- Utilized epsilon values from `config.yaml` to prevent division by zero errors.
+
+### 5.4 Logging System
+- Implemented comprehensive logging to track script execution progress.
+- Logs include data loading, feature engineering steps, and pipeline creation.
+
+### 5.5 Preprocessing Pipeline
+- Created separate pipelines for numeric and categorical features:
+  - Numeric: `SimpleImputer` for missing values, `StandardScaler` for normalization
+  - Categorical: `SimpleImputer` and `OneHotEncoder`
+- Combined pipelines using `ColumnTransformer`
+
+### 5.6 Error Handling and Debugging
+- Implemented robust exception handling and logging for easier debugging.
+- Addressed issues like KeyError for the 'Label' column and inconsistent column naming.
+
+## 6. Final Results
+- Successfully transformed the dataset from (2390275, 45) to (2390275, 136) shape, indicating the addition of engineered features and one-hot encoded categorical variables.
+- Saved the preprocessed data to 'NF-UNSW-NB15-v2_preprocessed.csv'.
+
+## 7. Key Takeaways from the Column Naming Challenge
+- Data preprocessing is often the most time-consuming part of a data science project.
+- Assumptions about data format can lead to significant setbacks.
+- Flexibility and robustness in code can save substantial time in the long run.
+- The importance of thorough data exploration before diving into preprocessing cannot be overstated.
+
+8. Autoencoder Approach
+8.1 Rationale for Using Autoencoders
+We decided to explore the use of autoencoders for several reasons:
+
+Dimensionality Reduction: Autoencoders can learn a compressed representation of the input data, which can be useful for feature extraction and dimensionality reduction in high-dimensional datasets like network flow data.
+Anomaly Detection: By learning to reconstruct normal network flow patterns, autoencoders can potentially identify anomalous or malicious traffic that deviates from these patterns.
+Unsupervised Learning: Autoencoders can learn useful features without requiring labeled data, which is beneficial when dealing with large amounts of unlabeled network traffic.
+Feature Learning: The encoder part of the autoencoder can learn meaningful features that can be used for downstream tasks like classification.
+Noise Reduction: Autoencoders can help in denoising data, potentially improving the quality of features for classification tasks.
+
+8.2 Implementation Approach
+We implemented a two-stage approach:
+
+Autoencoder for Feature Learning:
+
+Designed an autoencoder architecture to compress and reconstruct the input data.
+Trained the autoencoder on the entire dataset (both normal and attack traffic).
+Used the encoder part to generate a lower-dimensional representation of the data.
+
+Classifier on Encoded Features:
+
+Used the encoded features as input to a separate classifier (e.g., neural network, random forest).
+Trained the classifier to distinguish between different types of network traffic (normal and various attack types).
+
+8.3 Challenges and Adaptations
+
+Adjusted the autoencoder architecture to match the input dimensions of our preprocessed dataset.
+Implemented proper handling of categorical variables through encoding.
+Shifted from binary classification to multi-class classification to accommodate various attack types.
+
+9. Analysis of Autoencoder and Classification Results
+9.1 Performance Overview
+After running our autoencoder and classification pipeline, we obtained the following results:
+Copy              precision    recall  f1-score   support
+           0       0.00      0.00      0.00       416
+           1       0.14      0.67      0.23       461
+           2       1.00      1.00      1.00    459109
+           3       0.43      0.01      0.01      1200
+           4       0.79      0.77      0.78      6281
+           5       0.72      0.78      0.75      4552
+           6       0.90      0.75      0.82      3273
+           7       0.75      0.84      0.79      2477
+           8       0.79      0.75      0.77       259
+           9       0.00      0.00      0.00        27
+    accuracy                           0.99    478055
+   macro avg       0.55      0.56      0.51    478055
+weighted avg       0.99      0.99      0.99    478055
+
+9.2 Key Observations
+
+Class Imbalance: There's a severe class imbalance, with class 2 dominating the dataset (459,109 out of 478,055 samples).
+Performance Variability: Performance varies significantly across classes:
+
+Classes 0 and 9 have zero precision, recall, and F1-score.
+Class 2 shows perfect performance, likely due to its dominance.
+Other classes show varying degrees of performance, with F1-scores ranging from 0.01 to 0.82.
+
+
+Overall Metrics: While overall accuracy is high (0.99), this is misleading due to the class imbalance.
+Macro vs Weighted Average: The discrepancy between macro average (0.51 F1-score) and weighted average (0.99 F1-score) further highlights the impact of class imbalance.
+
+9.3 Challenges Identified
+
+Class Imbalance: The extreme dominance of one class is skewing overall results and hindering the model's ability to learn from minority classes.
+Underperforming Classes: Some classes (0, 1, 3, 9) are poorly recognized by the model.
+Precision-Recall Trade-off: Some classes show a significant imbalance between precision and recall.
+
+10. Next step for Improvement
+
+Based on our analysis, we propose the following steps to improve our model:
+
+Address Class Imbalance:
+
+Implement techniques like SMOTE for oversampling minority classes.
+Explore undersampling of the majority class.
+Use class weighting in the model to give more importance to minority classes.
+
+Feature Engineering and Selection:
+
+Conduct feature importance analysis to identify key features for distinguishing underperforming classes.
+Create new features that might help in differentiating these classes.
+
+Model Architecture Adjustments:
+
+Experiment with different autoencoder architectures (e.g., deeper networks, different activation functions).
+Try ensemble methods to combine multiple models.
+
+Hyperparameter Tuning:
+
+Use techniques like grid search or random search to optimize model parameters.
+Focus on parameters that might help with class imbalance and minority class detection.
+
+Evaluation Metrics:
+
+Implement additional metrics like ROC AUC or average precision score.
+Use stratified k-fold cross-validation for more robust performance estimation.
+
+Error Analysis:
+
+Conduct a detailed analysis of misclassified samples, especially for poorly performing classes.
+Use this insight to guide further feature engineering or model adjustments.
+
+Data Augmentation:
+
+For cybersecurity data, consider generating synthetic samples for minority attack classes using domain knowledge.
+
+Anomaly Detection Approach:
+
+Explore using the autoencoder for anomaly detection by setting a reconstruction error threshold.
+Combine this with the classification approach for a two-stage detection system.
+
+11. Next Steps
+
+Implement the recommended improvements, starting with addressing class imbalance.
+Retrain the model with the new approach and evaluate performance.
+Iterate on the process, focusing on improving detection of minority classes.
+Consider exploring other advanced techniques like one-class SVM or isolation forests for anomaly detection.
+Develop a comprehensive evaluation framework that accounts for the specific requirements of network security classification.

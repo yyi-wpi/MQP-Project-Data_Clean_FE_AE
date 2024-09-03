@@ -1,0 +1,22 @@
+# Input and Output
+input_file: 'NF-UNSW-NB15-v2_cleaned.csv'
+output_file: 'NF-UNSW-NB15-v2_preprocessed.csv'
+
+# Target column (keep original case)
+target_column: 'Label'
+
+# Feature Engineering
+feature_engineering:
+  bytes_per_packet_epsilon: 1  # To avoid division by zero
+  in_out_ratio_epsilon: 1  # To avoid division by zero
+
+# Preprocessing
+numeric_imputer_strategy: 'mean'
+categorical_imputer_strategy: 'most_frequent'
+
+# Random State for reproducibility
+random_state: 42
+
+# Logging
+log_file: 'feature_engineering.log'
+log_level: 'INFO'  # Can be DEBUG, INFO, WARNING, ERROR, CRITICAL
